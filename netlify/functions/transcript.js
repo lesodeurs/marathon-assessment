@@ -51,13 +51,16 @@ Keep the total response between 250 and 350 words. Do not include any headers, b
         'anthropic-version': '2023-06-01'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
+        model: 'claude-sonnet-4-5',
         max_tokens: 1000,
         messages: [{ role: 'user', content: prompt }]
       })
     });
 
     const data = await response.json();
+    console.log('Claude API status:', response.status);
+    console.log('Claude API response:', JSON.stringify(data).slice(0, 400));
+    if (data.error) throw new Error('API error: ' + (data.error.message || JSON.stringify(data.error)));
     const text = data.content?.find(b => b.type === 'text')?.text || '';
 
     if (!text) throw new Error('Empty response from Claude');
