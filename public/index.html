@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Marathon of Imperative Synchronization — Self-Assessment</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Cinzel:wght@400;600&family=Source+Sans+3:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1612;
+    --parchment: #f5f0e8;
+    --gold: #c8a84b;
+    --gold-light: #e8d48a;
+    --rust: #8b3a2a;
+    --sage: #4a6650;
+    --mist: #e8e0d0;
+    --shadow: rgba(26,22,18,0.15);
+    --head-color: #6b4c8a;
+    --feet-color: #2a6b5a;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--parchment);
+    color: var(--ink);
+    font-family: 'Source Sans 3', sans-serif;
+    min-height: 100vh;
+    background-image:
+      radial-gradient(ellipse at 20% 10%, rgba(200,168,75,0.08) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(74,102,80,0.06) 0%, transparent 50%),
+      url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8a84b' fill-opacity='0.03'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+  }
+
+  /* ── HEADER ── */
+  .site-header {
+    text-align: center;
+    padding: 60px 24px 40px;
+    position: relative;
+  }
+  .site-header::after {
+    content: '';
+    display: block;
+    width: 80px;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    margin: 32px auto 0;
+  }
+  .eyebrow {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 4px;
+    color: var(--gold);
+    text-transform: uppercase;
+    margin-bottom: 16px;
+  }
+  .site-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(28px, 5vw, 48px);
+    font-weight: 300;
+    line-height: 1.2;
+    color: var(--ink);
+    margin-bottom: 8px;
+  }
+  .site-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-style: italic;
+    color: #6b5d4f;
+    margin-bottom: 20px;
+  }
+  .site-intro {
+    max-width: 560px;
+    margin: 0 auto;
+    font-size: 15px;
+    line-height: 1.7;
+    color: #5a4d42;
+    font-weight: 300;
+  }
+
+  /* ── PROGRESS ── */
+  .progress-wrap {
+    max-width: 680px;
+    margin: 40px auto 0;
+    padding: 0 24px;
+  }
+  .progress-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: #8a7a6a;
+    margin-bottom: 8px;
+    font-family: 'Cinzel', serif;
+  }
+  .progress-track {
+    height: 3px;
+    background: var(--mist);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+    border-radius: 2px;
+    transition: width 0.5s ease;
+    width: 0%;
+  }
+
+  /* ── CARD ── */
+  .card-wrap {
+    max-width: 680px;
+    margin: 32px auto;
+    padding: 0 24px;
+  }
+  .card {
+    background: white;
+    border-radius: 4px;
+    box-shadow: 0 2px 24px var(--shadow), 0 0 0 1px rgba(200,168,75,0.15);
+    overflow: hidden;
+    animation: cardIn 0.4s ease;
+  }
+  @keyframes cardIn {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .card-band {
+    height: 4px;
+    background: linear-gradient(90deg, var(--gold), var(--gold-light));
+  }
+  .card-band.head { background: linear-gradient(90deg, var(--head-color), #9b7ab8); }
+  .card-band.feet { background: linear-gradient(90deg, var(--feet-color), #5a9b80); }
+  .card-inner { padding: 40px 44px; }
+
+  .section-tag {
+    display: inline-block;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 3px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 20px;
+    text-transform: uppercase;
+  }
+  .section-tag.head { background: rgba(107,76,138,0.1); color: var(--head-color); }
+  .section-tag.feet { background: rgba(42,107,90,0.1); color: var(--feet-color); }
+  .section-tag.intro { background: rgba(200,168,75,0.12); color: #7a5e1a; }
+  .section-tag.result { background: rgba(26,22,18,0.08); color: var(--ink); }
+
+  .card-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 26px;
+    font-weight: 400;
+    line-height: 1.3;
+    margin-bottom: 12px;
+    color: var(--ink);
+  }
+  .card-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #6b5d4f;
+    margin-bottom: 32px;
+    font-weight: 300;
+  }
+
+  /* ── QUESTIONS ── */
+  .question-block {
+    margin-bottom: 28px;
+  }
+  .question-text {
+    font-size: 15px;
+    line-height: 1.6;
+    color: var(--ink);
+    margin-bottom: 14px;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+  }
+  .scale-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .scale-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: #9a8a7a;
+    margin-top: 6px;
+    letter-spacing: 0.3px;
+  }
+  .scale-label-l { text-align: left; }
+  .scale-label-r { text-align: right; }
+
+  .radio-group {
+    display: flex;
+    gap: 8px;
+    flex: 1;
+  }
+  .radio-group input[type=radio] { display: none; }
+  .radio-group label {
+    flex: 1;
+    aspect-ratio: 1;
+    max-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1.5px solid var(--mist);
+    border-radius: 3px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: #a09080;
+    transition: all 0.2s;
+    background: var(--parchment);
+    user-select: none;
+  }
+  .radio-group label:hover {
+    border-color: var(--gold);
+    color: var(--gold);
+    background: rgba(200,168,75,0.06);
+  }
+  .radio-group input[type=radio]:checked + label {
+    background: var(--ink);
+    border-color: var(--ink);
+    color: var(--parchment);
+  }
+  .head-section .radio-group input[type=radio]:checked + label {
+    background: var(--head-color);
+    border-color: var(--head-color);
+    color: white;
+  }
+  .feet-section .radio-group input[type=radio]:checked + label {
+    background: var(--feet-color);
+    border-color: var(--feet-color);
+    color: white;
+  }
+
+  /* ── BUTTONS ── */
+  .btn-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 36px;
+    padding-top: 28px;
+    border-top: 1px solid var(--mist);
+  }
+  .btn {
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 12px 28px;
+    border-radius: 3px;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+  }
+  .btn-ghost {
+    background: transparent;
+    border: 1.5px solid var(--mist);
+    color: #8a7a6a;
+  }
+  .btn-ghost:hover { border-color: #a09080; color: var(--ink); }
+  .btn-primary {
+    background: var(--ink);
+    color: var(--parchment);
+  }
+  .btn-primary:hover { background: #2e2820; transform: translateY(-1px); box-shadow: 0 4px 12px var(--shadow); }
+  .btn-gold {
+    background: linear-gradient(135deg, var(--gold), #a8882b);
+    color: white;
+    box-shadow: 0 2px 12px rgba(200,168,75,0.3);
+  }
+  .btn-gold:hover { transform: translateY(-1px); box-shadow: 0 4px 18px rgba(200,168,75,0.4); }
+
+  /* ── RESULTS ── */
+  .result-header {
+    text-align: center;
+    padding: 48px 44px 32px;
+    border-bottom: 1px solid var(--mist);
+  }
+  .result-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 32px;
+    font-weight: 300;
+    margin-bottom: 8px;
+  }
+  .result-subtitle {
+    font-family: 'Cormorant Garamond', serif;
+    font-style: italic;
+    font-size: 17px;
+    color: #6b5d4f;
+  }
+
+  .state-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    padding: 32px 44px;
+    border-bottom: 1px solid var(--mist);
+  }
+  @media (max-width: 540px) { .state-grid { grid-template-columns: 1fr; } }
+
+  .state-card {
+    border-radius: 4px;
+    padding: 20px 22px;
+    position: relative;
+    overflow: hidden;
+  }
+  .state-card.head-card {
+    background: linear-gradient(135deg, rgba(107,76,138,0.08), rgba(107,76,138,0.04));
+    border: 1px solid rgba(107,76,138,0.2);
+  }
+  .state-card.feet-card {
+    background: linear-gradient(135deg, rgba(42,107,90,0.08), rgba(42,107,90,0.04));
+    border: 1px solid rgba(42,107,90,0.2);
+  }
+  .state-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .state-card.head-card .state-label { color: var(--head-color); }
+  .state-card.feet-card .state-label { color: var(--feet-color); }
+  .state-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  .state-score {
+    font-size: 12px;
+    color: #8a7a6a;
+  }
+  .state-bar {
+    height: 3px;
+    border-radius: 2px;
+    margin-top: 10px;
+    background: var(--mist);
+    overflow: hidden;
+  }
+  .state-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    transition: width 1s ease 0.3s;
+  }
+  .head-card .state-bar-fill { background: var(--head-color); }
+  .feet-card .state-bar-fill { background: var(--feet-color); }
+
+  .ai-section {
+    padding: 32px 44px;
+  }
+  .ai-loading {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    color: #8a7a6a;
+    font-style: italic;
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 17px;
+  }
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--mist);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex-shrink: 0;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .transcript-box {
+    background: #faf8f4;
+    border: 1px solid rgba(200,168,75,0.2);
+    border-radius: 4px;
+    padding: 28px 32px;
+    font-size: 15px;
+    line-height: 1.8;
+    color: var(--ink);
+    white-space: pre-wrap;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 300;
+  }
+
+  .action-row {
+    padding: 28px 44px 40px;
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--mist);
+  }
+
+  /* ── INTRO CARD ── */
+  .model-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin: 24px 0 32px;
+  }
+  @media (max-width: 500px) { .model-grid { grid-template-columns: 1fr; } }
+  .model-item {
+    padding: 14px 16px;
+    border-radius: 3px;
+    border-left: 3px solid;
+  }
+  .model-item.head-item { border-color: var(--head-color); background: rgba(107,76,138,0.05); }
+  .model-item.feet-item { border-color: var(--feet-color); background: rgba(42,107,90,0.05); }
+  .model-item-label {
+    font-family: 'Cinzel', serif;
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .head-item .model-item-label { color: var(--head-color); }
+  .feet-item .model-item-label { color: var(--feet-color); }
+  .model-item-text { font-size: 13px; color: #5a4d42; line-height: 1.5; }
+
+  /* ── HIDDEN ── */
+  .screen { display: none; }
+  .screen.active { display: block; }
+
+  .error-msg {
+    color: var(--rust);
+    font-size: 13px;
+    margin-top: 12px;
+    font-style: italic;
+  }
+
+  @media (max-width: 500px) {
+    .card-inner, .ai-section, .action-row, .result-header { padding-left: 24px; padding-right: 24px; }
+    .state-grid { padding-left: 24px; padding-right: 24px; }
+  }
+
+  /* ── EMAIL GATE ── */
+  .gate-icon {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, rgba(200,168,75,0.15), rgba(200,168,75,0.05));
+    border: 1.5px solid rgba(200,168,75,0.3);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto 24px;
+    font-size: 22px;
+  }
+  .gate-title {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 28px;
+    font-weight: 400;
+    text-align: center;
+    margin-bottom: 10px;
+    line-height: 1.3;
+  }
+  .gate-desc {
+    font-size: 14px;
+    line-height: 1.7;
+    color: #6b5d4f;
+    text-align: center;
+    margin-bottom: 32px;
+    font-weight: 300;
+    max-width: 420px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .gate-perks {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 32px;
+    max-width: 380px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .gate-perk {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 13.5px;
+    color: #5a4d42;
+    line-height: 1.5;
+  }
+  .gate-perk-dot {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--gold), var(--gold-light));
+    flex-shrink: 0;
+    margin-top: 2px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 9px;
+    color: white;
+    font-weight: 700;
+  }
+  .gate-form {
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .gate-input-row {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    margin-bottom: 16px;
+  }
+  .gate-input {
+    width: 100%;
+    padding: 13px 16px;
+    border: 1.5px solid var(--mist);
+    border-radius: 3px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 14px;
+    color: var(--ink);
+    background: var(--parchment);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .gate-input:focus {
+    border-color: var(--gold);
+    background: white;
+  }
+  .gate-input::placeholder { color: #b0a090; }
+  .gate-submit {
+    width: 100%;
+    padding: 14px;
+    font-family: 'Cinzel', serif;
+    font-size: 11px;
+    letter-spacing: 2.5px;
+    text-transform: uppercase;
+    background: var(--ink);
+    color: var(--parchment);
+    border: none;
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .gate-submit:hover { background: #2e2820; transform: translateY(-1px); box-shadow: 0 4px 14px var(--shadow); }
+  .gate-privacy {
+    text-align: center;
+    font-size: 11.5px;
+    color: #a09080;
+    margin-top: 14px;
+    line-height: 1.5;
+  }
+  .gate-privacy a { color: #8a7a6a; text-decoration: underline; }
+  .gate-error {
+    color: var(--rust);
+    font-size: 12.5px;
+    text-align: center;
+    margin-top: 10px;
+    font-style: italic;
+    display: none;
+  }
+  .gate-divider {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 20px 0;
+    max-width: 400px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .gate-divider::before, .gate-divider::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--mist);
+  }
+  .gate-divider span {
+    font-size: 11px;
+    color: #b0a090;
+    letter-spacing: 1px;
+    font-family: 'Cinzel', serif;
+    white-space: nowrap;
+  }
+  .btn-skip {
+    display: block;
+    text-align: center;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+    padding: 11px;
+    font-family: 'Cinzel', serif;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    background: transparent;
+    color: #a09080;
+    border: 1.5px solid var(--mist);
+    border-radius: 3px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .btn-skip:hover { color: var(--ink); border-color: #c0b0a0; }
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <p class="eyebrow">Self-Assessment</p>
+  <h1 class="site-title">The Marathon of<br>Imperative Synchronization</h1>
+  <p class="site-subtitle">Head vs. Feet Model</p>
+  <p class="site-intro">Answer honestly. There are no wrong responses — only a clearer picture of where you stand today, and where you might go from here.</p>
+</header>
+
+<div class="progress-wrap">
+  <div class="progress-label">
+    <span id="progress-text">Begin</span>
+    <span id="progress-pct">0%</span>
+  </div>
+  <div class="progress-track"><div class="progress-fill" id="progress-fill"></div></div>
+</div>
+
+<div class="card-wrap">
+
+  <!-- ── SCREEN 0: INTRO ── -->
+  <div class="screen active" id="screen-0">
+    <div class="card">
+      <div class="card-band"></div>
+      <div class="card-inner">
+        <span class="section-tag intro">About This Assessment</span>
+        <h2 class="card-title">How does your marathon look?</h2>
+        <p class="card-desc">This assessment measures two dimensions of your life's journey. Rate each statement on a scale of 1 to 5. At the end, you'll receive a personalized transcript identifying your current Head state and Feet pace — along with specific recommendations for moving toward balance.</p>
+        <div class="model-grid">
+          <div class="model-item head-item">
+            <div class="model-item-label">The Head</div>
+            <div class="model-item-text">How you acquire, hold, and share knowledge — and whether it leads to arrogance, complacency, or balance.</div>
+          </div>
+          <div class="model-item feet-item">
+            <div class="model-item-label">The Feet</div>
+            <div class="model-item-text">How you treat others, uphold your integrity, and contribute to the world around you.</div>
+          </div>
+          <div class="model-item head-item">
+            <div class="model-item-label">3 Head States</div>
+            <div class="model-item-text">Front-Heavy · Back-Heavy · Balanced</div>
+          </div>
+          <div class="model-item feet-item">
+            <div class="model-item-label">3 Feet Paces</div>
+            <div class="model-item-text">Fast-Pace · Slow-Pace · Marathon-Pace</div>
+          </div>
+        </div>
+        <p class="card-desc" style="margin-bottom:0;">The assessment takes approximately <strong>5 minutes</strong>. Answer based on how you truly are — not how you aspire to be.</p>
+        <div class="btn-row" style="border:none; padding-top:24px;">
+          <button class="btn btn-primary" onclick="goTo(1)">Begin the Assessment →</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREENS 1–6: QUESTIONS ── -->
+  <!-- Generated by JS below -->
+
+  <!-- ── SCREEN EMAIL GATE ── -->
+  <div class="screen" id="screen-gate">
+    <div class="card">
+      <div class="card-band" style="background: linear-gradient(90deg, var(--gold), var(--gold-light));"></div>
+      <div class="card-inner" style="padding-top:48px; padding-bottom:48px;">
+        <div class="gate-icon">✦</div>
+        <h2 class="gate-title">Your results are ready.</h2>
+        <p class="gate-desc">Enter your name and email to receive your personalized transcript — including your Head state, Feet pace, and specific recommendations for running a better race.</p>
+
+        <div class="gate-perks">
+          <div class="gate-perk">
+            <div class="gate-perk-dot">✓</div>
+            <span>Your AI-generated personal transcript identifying your current marathon profile</span>
+          </div>
+          <div class="gate-perk">
+            <div class="gate-perk-dot">✓</div>
+            <span>Specific, actionable recommendations for moving toward balance and synchronization</span>
+          </div>
+          <div class="gate-perk">
+            <div class="gate-perk-dot">✓</div>
+            <span>Occasional reflections and updates from Brian C. Bradford — no spam, ever</span>
+          </div>
+        </div>
+
+        <div class="gate-form">
+          <div class="gate-input-row">
+            <input class="gate-input" type="text" id="gate-name" placeholder="Your first name" autocomplete="given-name">
+            <input class="gate-input" type="email" id="gate-email" placeholder="Your email address" autocomplete="email">
+          </div>
+          <button class="gate-submit" onclick="submitGate()">Reveal My Results →</button>
+          <p class="gate-error" id="gate-error">Please enter a valid name and email address.</p>
+          <p class="gate-privacy">Your information is never sold or shared. Unsubscribe anytime.<br>By continuing you agree to receive occasional emails from Brian C. Bradford.</p>
+        </div>
+
+        <div class="gate-divider"><span>or</span></div>
+        <button class="btn-skip" onclick="skipGate()">Skip — view results without saving</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── SCREEN 7: RESULTS ── -->
+  <div class="screen" id="screen-result">
+    <div class="card">
+      <div class="card-band" id="result-band"></div>
+      <div class="result-header">
+        <span class="section-tag result">Your Results</span>
+        <h2 class="result-title" id="result-title">Your Marathon Profile</h2>
+        <p class="result-subtitle" id="result-subtitle"></p>
+      </div>
+
+      <div class="state-grid">
+        <div class="state-card head-card">
+          <div class="state-label">Head State</div>
+          <div class="state-name" id="head-state-name">—</div>
+          <div class="state-score" id="head-state-score"></div>
+          <div class="state-bar"><div class="state-bar-fill" id="head-bar" style="width:0%"></div></div>
+        </div>
+        <div class="state-card feet-card">
+          <div class="state-label">Feet Pace</div>
+          <div class="state-name" id="feet-state-name">—</div>
+          <div class="state-score" id="feet-state-score"></div>
+          <div class="state-bar"><div class="state-bar-fill" id="feet-bar" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <div class="ai-section">
+        <div class="ai-loading" id="ai-loading">
+          <div class="spinner"></div>
+          <span>Generating your personal transcript…</span>
+        </div>
+        <div id="transcript-output" style="display:none;">
+          <p style="font-family:'Cinzel',serif;font-size:10px;letter-spacing:3px;color:#8a7a6a;margin-bottom:16px;text-transform:uppercase;">Personal Transcript</p>
+          <div class="transcript-box" id="transcript-text"></div>
+        </div>
+        <p class="error-msg" id="ai-error" style="display:none;"></p>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-ghost" onclick="printTranscript()">Print / Save PDF</button>
+        <button class="btn btn-ghost" onclick="resetAssessment()">Retake Assessment</button>
+        <button class="btn btn-gold" onclick="window.open('https://kdp.amazon.com','_blank')">Get the Book →</button>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /card-wrap -->
+
+<script>
+// ══════════════════════════════════════════
+// ASSESSMENT DATA
+// ══════════════════════════════════════════
+const sections = [
+  {
+    id: 'front_heavy',
+    dimension: 'head',
+    title: 'Knowledge & Arrogance',
+    tag: 'The Head — Part 1 of 3',
+    desc: 'These questions explore how you relate to the knowledge and expertise you have acquired. Rate each statement from 1 (strongly disagree) to 5 (strongly agree).',
+    scaleLeft: 'Strongly Disagree',
+    scaleRight: 'Strongly Agree',
+    questions: [
+      'When I have more expertise than others in a room, I find it difficult to stay patient with their questions or ideas.',
+      'I tend to dismiss perspectives that conflict with what I already know to be true.',
+      'I believe my education and experience give me a better understanding of most situations than those around me.',
+    ]
+  },
+  {
+    id: 'back_heavy',
+    dimension: 'head',
+    title: 'Curiosity & Growth',
+    tag: 'The Head — Part 2 of 3',
+    desc: 'These questions explore your relationship with learning, challenge, and personal growth. Rate each statement from 1 (strongly disagree) to 5 (strongly agree).',
+    scaleLeft: 'Strongly Disagree',
+    scaleRight: 'Strongly Agree',
+    questions: [
+      'I am comfortable with who I am and rarely feel the need to seek out new knowledge or experiences.',
+      'When life is going smoothly, I don\'t tend to ask hard questions about myself or my direction.',
+      'I rarely reflect on whether my identity and values need to change or grow.',
+    ]
+  },
+  {
+    id: 'balanced_head',
+    dimension: 'head',
+    title: 'Humility & Sharing',
+    tag: 'The Head — Part 3 of 3',
+    desc: 'These questions explore how you use your knowledge in service of others. Rate each statement from 1 (strongly disagree) to 5 (strongly agree).',
+    scaleLeft: 'Strongly Disagree',
+    scaleRight: 'Strongly Agree',
+    questions: [
+      'I actively look for opportunities to share what I know with others who could benefit from it.',
+      'I regularly examine myself for blind spots, biases, or areas where I may be wrong.',
+      'I genuinely enjoy learning from people whose backgrounds or perspectives differ from mine.',
+    ]
+  },
+  {
+    id: 'fast_pace',
+    dimension: 'feet',
+    title: 'Self-Interest & Others',
+    tag: 'The Feet — Part 1 of 3',
+    desc: 'These questions explore how you balance your own advancement with the wellbeing of others. Rate each statement from 1 (strongly disagree) to 5 (strongly agree).',
+    scaleLeft: 'Strongly Disagree',
+    scaleRight: 'Strongly Agree',
+    questions: [
+      'When pursuing a goal, I tend to prioritize my own progress even when it comes at a cost to others.',
+      'I have, at times, compromised my integrity in order to advance personally or professionally.',
+      'My personal success is more important to me than the impact my actions have on the people around me.',
+    ]
+  },
+  {
+    id: 'slow_pace',
+    dimension: 'feet',
+    title: 'Action & Contribution',
+    tag: 'The Feet — Part 2 of 3',
+    desc: 'These questions explore whether you act on your awareness and use your abilities to benefit others. Rate each statement from 1 (strongly disagree) to 5 (strongly agree).',
+    scaleLeft: 'Strongly Disagree',
+    scaleRight: 'Strongly Agree',
+    questions: [
+      'There are situations where I have the knowledge or ability to help others, but I hold back from acting.',
+      'When I witness something unfair or dishonest, I tend to stay quiet rather than address it.',
+      'I often miss opportunities to make a positive difference because I feel it isn\'t my place, or the timing isn\'t right.',
+    ]
+  },
+  {
+    id: 'marathon_pace',
+    dimension: 'feet',
+    title: 'Integrity & Purpose',
+    tag: 'The Feet — Part 3 of 3',
+    desc: 'These questions explore the consistency of your character across life\'s varying terrains. Rate each statement from 1 (strongly disagree) to 5 (strongly agree).',
+    scaleLeft: 'Strongly Disagree',
+    scaleRight: 'Strongly Agree',
+    questions: [
+      'My values and how I treat people remain consistent whether I am in a position of power or not.',
+      'I make regular, deliberate efforts to benefit others — not for recognition, but because it matters.',
+      'At the end of each day, I feel my actions have been aligned with who I genuinely want to be.',
+    ]
+  }
+];
+
+const TOTAL_SCREENS = sections.length; // 6
+let currentScreen = 0;
+const answers = {}; // { sectionId: [1..5, 1..5, 1..5] }
+
+// ── BUILD QUESTION SCREENS ──
+function buildScreens() {
+  const wrap = document.querySelector('.card-wrap');
+  sections.forEach((sec, si) => {
+    const div = document.createElement('div');
+    div.className = 'screen';
+    div.id = `screen-${si + 1}`;
+    const isHead = sec.dimension === 'head';
+    div.innerHTML = `
+      <div class="card ${isHead ? 'head-section' : 'feet-section'}">
+        <div class="card-band ${sec.dimension}"></div>
+        <div class="card-inner">
+          <span class="section-tag ${sec.dimension}">${sec.tag}</span>
+          <h2 class="card-title">${sec.title}</h2>
+          <p class="card-desc">${sec.desc}</p>
+          ${sec.questions.map((q, qi) => `
+            <div class="question-block">
+              <div class="question-text">${qi + 1}. ${q}</div>
+              <div class="radio-group" id="rg-${si}-${qi}">
+                ${[1,2,3,4,5].map(v => `
+                  <input type="radio" name="q-${si}-${qi}" id="r-${si}-${qi}-${v}" value="${v}">
+                  <label for="r-${si}-${qi}-${v}">${v}</label>
+                `).join('')}
+              </div>
+              <div class="scale-labels">
+                <span class="scale-label-l">${sec.scaleLeft}</span>
+                <span class="scale-label-r">${sec.scaleRight}</span>
+              </div>
+            </div>
+          `).join('')}
+          <p class="error-msg" id="err-${si}" style="display:none;">Please answer all questions before continuing.</p>
+          <div class="btn-row">
+            ${si > 0 ? `<button class="btn btn-ghost" onclick="goTo(${si})">← Back</button>` : ''}
+            <button class="btn btn-primary" onclick="submitSection(${si})">${si < TOTAL_SCREENS - 1 ? 'Continue →' : 'See My Results →'}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    // Insert before result screen
+    wrap.insertBefore(div, document.getElementById('screen-result'));
+  });
+}
+
+function goTo(n) {
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  let target;
+  if (n === 'result') target = document.getElementById('screen-result');
+  else if (n === 'gate') target = document.getElementById('screen-gate');
+  else target = document.getElementById(`screen-${n}`);
+  if (target) { target.classList.add('active'); currentScreen = n; }
+  updateProgress(n);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function updateProgress(n) {
+  const pct = (n === 'result' || n === 'gate') ? (n === 'result' ? 100 : 92) : Math.round((n / (TOTAL_SCREENS + 1)) * 100);
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-pct').textContent = pct + '%';
+  const labels = ['Begin', 'Head: Arrogance', 'Head: Curiosity', 'Head: Humility', 'Feet: Self-Interest', 'Feet: Action', 'Feet: Integrity', 'Almost Done', 'Complete'];
+  if (n === 'gate') { document.getElementById('progress-text').textContent = 'Almost Done'; return; }
+  document.getElementById('progress-text').textContent = labels[n] || 'Complete';
+}
+
+function submitSection(si) {
+  const sec = sections[si];
+  const vals = sec.questions.map((_, qi) => {
+    const checked = document.querySelector(`input[name="q-${si}-${qi}"]:checked`);
+    return checked ? parseInt(checked.value) : null;
+  });
+  if (vals.includes(null)) {
+    document.getElementById(`err-${si}`).style.display = 'block';
+    return;
+  }
+  document.getElementById(`err-${si}`).style.display = 'none';
+  answers[sec.id] = vals;
+  if (si < TOTAL_SCREENS - 1) {
+    goTo(si + 2);
+  } else {
+    showResults();
+  }
+}
+
+// ══════════════════════════════════════════
+// SCORING
+// ══════════════════════════════════════════
+function score(id) {
+  const a = answers[id];
+  if (!a) return 0;
+  return a.reduce((s, v) => s + v, 0);
+}
+
+function getHeadState() {
+  const fh = score('front_heavy');   // high = arrogant
+  const bh = score('back_heavy');    // high = complacent
+  const bl = score('balanced_head'); // high = balanced
+  // Invert front_heavy and back_heavy for "balance" tendency
+  const balanceScore = bl - ((fh + bh) / 2);
+  if (fh >= 10 && fh > bh) return { state: 'Front-Heavy', score: fh, max: 15, pct: Math.round(fh/15*100) };
+  if (bh >= 10 && bh >= fh) return { state: 'Back-Heavy', score: bh, max: 15, pct: Math.round(bh/15*100) };
+  return { state: 'Balanced', score: bl, max: 15, pct: Math.round(bl/15*100) };
+}
+
+function getFeetState() {
+  const fp = score('fast_pace');      // high = self-serving
+  const sp = score('slow_pace');      // high = passive
+  const mp = score('marathon_pace');  // high = principled
+  if (fp >= 10 && fp > sp) return { state: 'Fast-Pace', score: fp, max: 15, pct: Math.round(fp/15*100) };
+  if (sp >= 10 && sp >= fp) return { state: 'Slow-Pace', score: sp, max: 15, pct: Math.round(sp/15*100) };
+  return { state: 'Marathon-Pace', score: mp, max: 15, pct: Math.round(mp/15*100) };
+}
+
+// ══════════════════════════════════════════
+// RESULTS
+// ══════════════════════════════════════════
+function showResults() {
+  // Route through email gate first
+  goTo('gate');
+}
+
+function submitGate() {
+  const name  = document.getElementById('gate-name').value.trim();
+  const email = document.getElementById('gate-email').value.trim();
+  const emailOk = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  if (!name || !emailOk) {
+    document.getElementById('gate-error').style.display = 'block';
+    return;
+  }
+  document.getElementById('gate-error').style.display = 'none';
+  window._gateData = { name, email };
+
+  // Fire-and-forget email capture — non-blocking
+  const head = getHeadState();
+  const feet = getFeetState();
+  subscribeToBrevo(name, email, head.state, feet.state);
+
+  revealResults(name);
+}
+
+function skipGate() {
+  window._gateData = { name: '', email: '' };
+  revealResults('');
+}
+
+function revealResults(name) {
+  const head = getHeadState();
+  const feet = getFeetState();
+
+  document.getElementById('head-state-name').textContent = head.state;
+  document.getElementById('feet-state-name').textContent = feet.state;
+  document.getElementById('head-state-score').textContent = `Score: ${head.score} / ${head.max}`;
+  document.getElementById('feet-state-score').textContent = `Score: ${feet.score} / ${feet.max}`;
+
+  const greeting = name ? `${name}'s Marathon Profile` : 'Your Marathon Profile';
+  document.getElementById('result-title').textContent = greeting;
+
+  setTimeout(() => {
+    document.getElementById('head-bar').style.width = head.pct + '%';
+    document.getElementById('feet-bar').style.width = feet.pct + '%';
+  }, 200);
+
+  const synced = head.state === 'Balanced' && feet.state === 'Marathon-Pace';
+  document.getElementById('result-subtitle').textContent = synced
+    ? 'Your Head and Feet are moving in synchronization.'
+    : 'See your personalized recommendations below.';
+
+  goTo('result');
+  fetchAITranscript(head, feet, name);
+}
+
+async function fetchAITranscript(head, feet, name) {
+  const rawScores = {
+    front_heavy: score('front_heavy'),
+    back_heavy: score('back_heavy'),
+    balanced_head: score('balanced_head'),
+    fast_pace: score('fast_pace'),
+    slow_pace: score('slow_pace'),
+    marathon_pace: score('marathon_pace'),
+  };
+
+  try {
+    const res = await fetch('/api/transcript', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ head, feet, name, rawScores })
+    });
+    const data = await res.json();
+    if (!data.transcript) throw new Error('No transcript');
+
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('transcript-text').textContent = data.transcript;
+    document.getElementById('transcript-output').style.display = 'block';
+  } catch (e) {
+    document.getElementById('ai-loading').style.display = 'none';
+    document.getElementById('ai-error').textContent = 'Unable to generate transcript at this time. Please try again.';
+    document.getElementById('ai-error').style.display = 'block';
+  }
+}
+
+async function subscribeToBrevo(name, email, headState, feetState) {
+  try {
+    await fetch('/api/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email, headState, feetState })
+    });
+  } catch (e) {
+    // Non-blocking — user still gets results even if this fails
+    console.warn('Subscribe failed:', e);
+  }
+}
+
+function printTranscript() {
+  window.print();
+}
+
+function resetAssessment() {
+  Object.keys(answers).forEach(k => delete answers[k]);
+  document.querySelectorAll('input[type=radio]').forEach(r => r.checked = false);
+  goTo(0);
+}
+
+// ── INIT ──
+buildScreens();
+updateProgress(0);
+</script>
+</body>
+</html>
