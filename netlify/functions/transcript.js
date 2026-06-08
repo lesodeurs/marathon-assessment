@@ -1,3 +1,5 @@
+const { getStore } = require('@netlify/blobs');
+
 exports.handler = async (event) => {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
@@ -65,6 +67,25 @@ Keep the total response between 250 and 350 words. Do not include any headers, b
     const text = data.content?.find(b => b.type === 'text')?.text || '';
 
     if (!text) throw new Error('Empty response from Claude');
+
+    // Save to Netlify Blobs
+    try {
+      const store = getStore('assessments');
+      const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+      await store.setJSON(id, {
+        id,
+        timestamp: new Date().toISOString(),
+        name: name || 'Anonymous',
+        context: context || '',
+        head,
+        feet,
+        rawScores,
+        transcript: text
+      });
+      console.log('Saved to Blobs with id:', id);
+    } catch (blobErr) {
+      console.error('Blob save failed (non-fatal):', blobErr);
+    }
 
     return {
       statusCode: 200,
