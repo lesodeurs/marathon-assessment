@@ -8,7 +8,11 @@ exports.handler = async (event) => {
   }
 
   try {
-    const store = getStore('assessments');
+    const store = getStore({
+  name: 'assessments',
+  siteID: process.env.NETLIFY_SITE_ID,
+  token: process.env.NETLIFY_TOKEN
+});;
     const { blobs } = await store.list();
 
     const results = await Promise.all(
