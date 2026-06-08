@@ -4,11 +4,12 @@ exports.handler = async (event) => {
   }
 
   try {
-    const { head, feet, name, rawScores } = JSON.parse(event.body);
+    const { head, feet, name, context, rawScores } = JSON.parse(event.body);
 
     const salutation = name ? `Address this person by name (${name}) in the opening sentence only.` : '';
+    const contextLine = context ? `The person shared this about why they took the assessment: "${context}". Weave this context naturally into your recommendations — make it feel like the transcript was written specifically for their situation.` : '';
 
-    const prompt = `You are an assessment interpreter for a philosophical framework called "The Marathon of Imperative Synchronization" by Brian C. Bradford. ${salutation}
+    const prompt = `You are an assessment interpreter for a philosophical framework called "The Marathon of Imperative Synchronization" by Brian C. Bradford. ${salutation} ${contextLine}
 
 The framework uses a "Head vs. Feet Model" with six states:
 
