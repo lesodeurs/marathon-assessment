@@ -70,7 +70,11 @@ Keep the total response between 250 and 350 words. Do not include any headers, b
 
     // Save to Netlify Blobs
     try {
-      const store = getStore('assessments');
+      const store = getStore({
+  name: 'assessments',
+  siteID: process.env.NETLIFY_SITE_ID,
+  token: process.env.NETLIFY_TOKEN
+});;
       const id = `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
       await store.setJSON(id, {
         id,
