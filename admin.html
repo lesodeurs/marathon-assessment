@@ -198,7 +198,7 @@
 
   async function loadResults() {
     try {
-      const res = await fetch('/.netlify/functions/get-results');
+      const res = await fetch('/.netlify/functions/results');
       const data = await res.json();
       allResults = data.results || [];
       updateStats();
