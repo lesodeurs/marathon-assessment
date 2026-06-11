@@ -1,574 +1,306 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Marathon Assessment — Admin</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet" />
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f5f0e8; color: #1a1612; min-height: 100vh; }
 
-    :root {
-      --bg: #0f0e0d;
-      --surface: #1a1916;
-      --surface2: #232220;
-      --border: rgba(255,255,255,0.08);
-      --border2: rgba(255,255,255,0.14);
-      --text: #f0ede8;
-      --muted: #8a8780;
-      --accent: #c9a96e;
-      --accent-dim: rgba(201,169,110,0.12);
-      --green: #4caf7d;
-      --green-dim: rgba(76,175,125,0.12);
-      --red: #e06c6c;
-      --red-dim: rgba(224,108,108,0.12);
-      --amber: #e5a84a;
-      --amber-dim: rgba(229,168,74,0.12);
-    }
-
-    body {
-      font-family: 'DM Sans', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      min-height: 100vh;
-      font-size: 15px;
-      line-height: 1.6;
-    }
-
-    header {
-      border-bottom: 1px solid var(--border);
-      padding: 1.5rem 2.5rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .logo {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.25rem;
-      color: var(--accent);
-      letter-spacing: 0.01em;
-    }
-
-    .logo span {
-      color: var(--muted);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 400;
-      margin-left: 0.75rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-    }
-
+    /* LOGIN */
     #login-screen {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      min-height: calc(100vh - 73px);
-      padding: 2rem;
+      display: flex; align-items: center; justify-content: center;
+      min-height: 100vh; background: #1a1612;
     }
-
-    .login-card {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 16px;
-      padding: 2.5rem;
-      width: 100%;
-      max-width: 380px;
+    .login-box {
+      background: #2a2420; border: 1px solid rgba(200,168,75,0.3);
+      padding: 48px; width: 360px; text-align: center;
     }
-
-    .login-card h2 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.5rem;
-      font-weight: 400;
-      margin-bottom: 0.5rem;
+    .login-box h1 { font-size: 20px; color: #e8d48a; margin-bottom: 8px; }
+    .login-box p { font-size: 13px; color: #8a7a6a; margin-bottom: 32px; }
+    .login-box input {
+      width: 100%; padding: 12px 16px; background: #1a1612;
+      border: 1px solid #5a4d42; color: #e8e0d0; font-size: 14px;
+      margin-bottom: 16px; outline: none;
     }
-
-    .login-card p {
-      color: var(--muted);
-      font-size: 0.875rem;
-      margin-bottom: 1.75rem;
+    .login-box input:focus { border-color: #c8a84b; }
+    .login-btn {
+      width: 100%; padding: 12px; background: #c8a84b; color: #1a1612;
+      border: none; font-size: 14px; font-weight: 600; cursor: pointer;
     }
+    .login-btn:hover { background: #e8d48a; }
+    .login-error { color: #e05a4a; font-size: 13px; margin-top: 12px; display: none; }
 
-    input[type="password"], input[type="text"] {
-      width: 100%;
-      background: var(--bg);
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.875rem;
-      padding: 0.65rem 1rem;
-      outline: none;
-      transition: border-color 0.2s;
-      margin-bottom: 1rem;
+    /* DASHBOARD */
+    #dashboard { display: none; }
+    .topbar {
+      background: #1a1612; padding: 16px 32px;
+      display: flex; align-items: center; justify-content: space-between;
     }
-
-    input:focus { border-color: var(--accent); }
-
-    button.primary {
-      width: 100%;
-      background: var(--accent);
-      color: #0f0e0d;
-      border: none;
-      border-radius: 8px;
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.875rem;
-      font-weight: 500;
-      padding: 0.7rem 1.5rem;
-      cursor: pointer;
-      transition: opacity 0.2s;
+    .topbar h1 { font-size: 16px; color: #e8d48a; letter-spacing: 0.05em; }
+    .topbar span { font-size: 12px; color: #8a7a6a; }
+    .logout-btn {
+      background: none; border: 1px solid #5a4d42; color: #8a7a6a;
+      padding: 6px 14px; font-size: 12px; cursor: pointer;
     }
+    .logout-btn:hover { border-color: #c8a84b; color: #c8a84b; }
 
-    button.primary:hover { opacity: 0.88; }
-
-    .error-msg {
-      color: var(--red);
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
-      display: none;
+    .stats-bar {
+      background: #2a2420; padding: 24px 32px;
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 24px;
     }
-
-    #dashboard { display: none; padding: 2rem 2.5rem; max-width: 1200px; margin: 0 auto; }
-
-    .stats-row {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-      gap: 1rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 1.25rem 1.5rem;
-    }
-
-    .stat-label {
-      font-size: 0.75rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 0.4rem;
-    }
-
-    .stat-value {
-      font-family: 'DM Serif Display', serif;
-      font-size: 2rem;
-      font-weight: 400;
-      line-height: 1;
-      color: var(--accent);
-    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 32px; font-weight: 700; color: #c8a84b; }
+    .stat-label { font-size: 11px; color: #8a7a6a; text-transform: uppercase; letter-spacing: 0.1em; margin-top: 4px; }
 
     .controls {
-      display: flex;
-      gap: 0.75rem;
-      margin-bottom: 1.5rem;
-      flex-wrap: wrap;
-      align-items: center;
+      padding: 20px 32px; display: flex; gap: 12px; align-items: center;
+      background: #f5f0e8; border-bottom: 1px solid #e8e0d0;
     }
-
-    select {
-      background: var(--surface);
-      border: 1px solid var(--border2);
-      border-radius: 8px;
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      font-size: 0.8rem;
-      padding: 0.5rem 0.85rem;
-      cursor: pointer;
-      outline: none;
+    .controls select, .controls input {
+      padding: 8px 12px; border: 1px solid #c0b0a0; background: white;
+      font-size: 13px; color: #1a1612; outline: none;
     }
+    .controls select:focus, .controls input:focus { border-color: #c8a84b; }
 
-    .results-count {
-      margin-left: auto;
-      font-size: 0.8rem;
-      color: var(--muted);
-    }
-
-    .results-list { display: flex; flex-direction: column; gap: 1rem; }
+    .results-grid { padding: 24px 32px; display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
 
     .result-card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      overflow: hidden;
-      transition: border-color 0.2s;
+      background: white; border: 1px solid #e8e0d0;
+      padding: 24px; position: relative;
+    }
+    .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+    .card-name { font-size: 16px; font-weight: 600; color: #1a1612; }
+    .card-email { font-size: 12px; color: #8a7a6a; margin-top: 2px; }
+    .card-date { font-size: 11px; color: #b0a090; }
+
+    .states-row { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+    .state-badge {
+      font-size: 11px; font-weight: 600; padding: 4px 10px;
+      letter-spacing: 0.05em; text-transform: uppercase;
+    }
+    .state-badge.head { background: rgba(107,76,138,0.1); color: #6b4c8a; }
+    .state-badge.feet { background: rgba(42,107,90,0.1); color: #2a6b5a; }
+    .state-badge.synced { background: rgba(200,168,75,0.15); color: #7a5e1a; }
+    .state-badge.unsynced { background: rgba(180,60,40,0.1); color: #8b3a2a; }
+
+    .score-bars { margin-bottom: 16px; }
+    .score-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+    .score-name { font-size: 11px; color: #8a7a6a; width: 130px; flex-shrink: 0; }
+    .score-bar-bg { flex: 1; height: 6px; background: #f0e8e0; border-radius: 3px; }
+    .score-bar-fill { height: 100%; border-radius: 3px; }
+    .score-val { font-size: 11px; color: #5a4d42; width: 30px; text-align: right; }
+
+    .context-text {
+      font-size: 12px; color: #5a4d42; font-style: italic;
+      padding: 10px 12px; background: #f8f4ee; border-left: 3px solid #c8a84b;
+      margin-bottom: 12px;
     }
 
-    .result-card:hover { border-color: var(--border2); }
-
-    .result-header {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 1rem 1.5rem;
-      cursor: pointer;
-      user-select: none;
+    .transcript-toggle {
+      font-size: 12px; color: #c8a84b; cursor: pointer; text-decoration: underline;
+      background: none; border: none; padding: 0;
+    }
+    .transcript-body {
+      display: none; margin-top: 12px; font-size: 12px; line-height: 1.7;
+      color: #5a4d42; padding: 12px; background: #f8f4ee;
+      border: 1px solid #e8e0d0; white-space: pre-wrap;
     }
 
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--accent-dim);
-      border: 1px solid rgba(201,169,110,0.25);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'DM Serif Display', serif;
-      font-size: 1rem;
-      color: var(--accent);
-      flex-shrink: 0;
-    }
+    .empty-state { text-align: center; padding: 80px 32px; color: #8a7a6a; }
+    .loading { text-align: center; padding: 80px; color: #8a7a6a; }
 
-    .result-meta { flex: 1; min-width: 0; }
-
-    .result-name {
-      font-weight: 500;
-      font-size: 0.95rem;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .result-time {
-      font-size: 0.75rem;
-      color: var(--muted);
-      margin-top: 1px;
-    }
-
-    .badges { display: flex; gap: 0.5rem; flex-wrap: wrap; align-items: center; }
-
-    .badge {
-      font-size: 0.7rem;
-      font-weight: 500;
-      padding: 0.25rem 0.65rem;
-      border-radius: 20px;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      white-space: nowrap;
-    }
-
-    .badge-balanced { background: var(--green-dim); color: var(--green); }
-    .badge-front { background: var(--red-dim); color: var(--red); }
-    .badge-back { background: var(--amber-dim); color: var(--amber); }
-    .badge-marathon { background: var(--green-dim); color: var(--green); }
-    .badge-fast { background: var(--red-dim); color: var(--red); }
-    .badge-slow { background: var(--amber-dim); color: var(--amber); }
-
-    .chevron {
-      color: var(--muted);
-      font-size: 1.1rem;
-      transition: transform 0.2s;
-      flex-shrink: 0;
-    }
-
-    .result-card.open .chevron { transform: rotate(180deg); }
-
-    .result-body {
-      display: none;
-      padding: 0 1.5rem 1.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .result-card.open .result-body { display: block; }
-
-    .scores-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin: 1rem 0;
-    }
-
-    .score-section { }
-
-    .score-section-label {
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 0.5rem;
-    }
-
-    .score-row {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      margin-bottom: 0.4rem;
-    }
-
-    .score-name {
-      font-size: 0.78rem;
-      color: var(--muted);
-      width: 100px;
-      flex-shrink: 0;
-    }
-
-    .score-bar-wrap {
-      flex: 1;
-      height: 5px;
-      background: var(--surface2);
-      border-radius: 3px;
-      overflow: hidden;
-    }
-
-    .score-bar {
-      height: 100%;
-      border-radius: 3px;
-      background: var(--accent);
-      transition: width 0.4s ease;
-    }
-
-    .score-num {
-      font-size: 0.75rem;
-      color: var(--muted);
-      width: 28px;
-      text-align: right;
-    }
-
-    .context-block {
-      background: var(--surface2);
-      border-left: 2px solid var(--accent);
-      border-radius: 0 6px 6px 0;
-      padding: 0.75rem 1rem;
-      margin: 1rem 0;
-      font-size: 0.85rem;
-      color: var(--muted);
-      font-style: italic;
-    }
-
-    .transcript-block {
-      margin-top: 1rem;
-    }
-
-    .transcript-label {
-      font-size: 0.7rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: 0.07em;
-      margin-bottom: 0.5rem;
-    }
-
-    .transcript-text {
-      font-size: 0.875rem;
-      line-height: 1.75;
-      color: #c8c5bf;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: var(--muted);
-    }
-
-    .empty-state h3 {
-      font-family: 'DM Serif Display', serif;
-      font-size: 1.25rem;
-      font-weight: 400;
-      margin-bottom: 0.5rem;
-      color: var(--text);
-    }
-
-    .loading {
-      text-align: center;
-      padding: 3rem;
-      color: var(--muted);
-      font-size: 0.875rem;
-    }
-
-    @media (max-width: 600px) {
-      header { padding: 1rem 1.25rem; }
-      #dashboard { padding: 1.25rem; }
-      .scores-grid { grid-template-columns: 1fr; }
-      .badges { display: none; }
+    @media (max-width: 768px) {
+      .stats-bar { grid-template-columns: repeat(2, 1fr); }
+      .results-grid { grid-template-columns: 1fr; padding: 16px; }
+      .controls { flex-wrap: wrap; padding: 16px; }
     }
   </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">The Marathon <span>Admin</span></div>
-</header>
-
+<!-- LOGIN -->
 <div id="login-screen">
-  <div class="login-card">
-    <h2>Results Dashboard</h2>
-    <p>Enter your admin token to view assessment results.</p>
-    <input type="password" id="token-input" placeholder="Admin token" />
-    <div class="error-msg" id="error-msg">Invalid token. Please try again.</div>
-    <button class="primary" onclick="loadResults()">View Results</button>
+  <div class="login-box">
+    <h1>Admin Dashboard</h1>
+    <p>Marathon of Imperative Synchronization</p>
+    <input type="password" id="token-input" placeholder="Enter admin token" onkeydown="if(event.key==='Enter') login()">
+    <button class="login-btn" onclick="login()">Access Dashboard</button>
+    <p class="login-error" id="login-error">Invalid token. Please try again.</p>
   </div>
 </div>
 
+<!-- DASHBOARD -->
 <div id="dashboard">
-  <div class="stats-row" id="stats-row"></div>
+  <div class="topbar">
+    <h1>MARATHON ASSESSMENT — ADMIN</h1>
+    <div style="display:flex;align-items:center;gap:16px;">
+      <span id="last-updated"></span>
+      <button class="logout-btn" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="stats-bar">
+    <div class="stat"><div class="stat-num" id="stat-total">—</div><div class="stat-label">Total Completions</div></div>
+    <div class="stat"><div class="stat-num" id="stat-synced">—</div><div class="stat-label">In Sync</div></div>
+    <div class="stat"><div class="stat-num" id="stat-balanced">—</div><div class="stat-label">Balanced Head</div></div>
+    <div class="stat"><div class="stat-num" id="stat-marathon">—</div><div class="stat-label">Marathon Pace</div></div>
+  </div>
+
   <div class="controls">
-    <select id="filter-head" onchange="renderResults()">
-      <option value="">All head states</option>
-      <option value="Balanced">Balanced Head</option>
+    <input type="text" id="search-input" placeholder="Search by name or email..." oninput="renderCards()" style="min-width:200px;">
+    <select id="head-filter" onchange="renderCards()">
+      <option value="">All Head States</option>
       <option value="Front-Heavy">Front-Heavy</option>
       <option value="Back-Heavy">Back-Heavy</option>
+      <option value="Balanced">Balanced</option>
     </select>
-    <select id="filter-feet" onchange="renderResults()">
-      <option value="">All feet states</option>
-      <option value="Marathon-Pace">Marathon-Pace</option>
+    <select id="feet-filter" onchange="renderCards()">
+      <option value="">All Feet States</option>
       <option value="Fast-Pace">Fast-Pace</option>
       <option value="Slow-Pace">Slow-Pace</option>
+      <option value="Marathon-Pace">Marathon-Pace</option>
     </select>
-    <span class="results-count" id="results-count"></span>
+    <select id="sync-filter" onchange="renderCards()">
+      <option value="">All Sync Status</option>
+      <option value="synced">In Sync</option>
+      <option value="unsynced">Out of Sync</option>
+    </select>
   </div>
-  <div class="results-list" id="results-list"></div>
+
+  <div id="results-container" class="results-grid">
+    <div class="loading">Loading results...</div>
+  </div>
 </div>
 
 <script>
+  const ADMIN_TOKEN = 'Mandy2025$';
   let allResults = [];
 
-  document.getElementById('token-input').addEventListener('keydown', e => {
-    if (e.key === 'Enter') loadResults();
-  });
-
-  async function loadResults() {
-    const token = document.getElementById('token-input').value.trim();
-    if (!token) return;
-
-    const list = document.getElementById('results-list');
-    list.innerHTML = '<div class="loading">Loading results…</div>';
-    document.getElementById('login-screen').style.display = 'none';
-    document.getElementById('dashboard').style.display = 'block';
-
-    try {
-      const res = await fetch(`/api/results?token=${encodeURIComponent(token)}`);
-      if (res.status === 401) {
-        document.getElementById('dashboard').style.display = 'none';
-        document.getElementById('login-screen').style.display = 'flex';
-        document.getElementById('error-msg').style.display = 'block';
-        return;
-      }
-      const data = await res.json();
-      allResults = data.results || [];
-      renderStats();
-      renderResults();
-    } catch (err) {
-      list.innerHTML = '<div class="loading">Failed to load results. Check console.</div>';
+  function login() {
+    const val = document.getElementById('token-input').value;
+    if (val === ADMIN_TOKEN) {
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      loadResults();
+    } else {
+      document.getElementById('login-error').style.display = 'block';
     }
   }
 
-  function renderStats() {
-    const total = allResults.length;
-    const balanced = allResults.filter(r => r.head?.state === 'Balanced').length;
-    const marathon = allResults.filter(r => r.feet?.state === 'Marathon-Pace').length;
-    const both = allResults.filter(r => r.head?.state === 'Balanced' && r.feet?.state === 'Marathon-Pace').length;
-
-    document.getElementById('stats-row').innerHTML = `
-      <div class="stat-card"><div class="stat-label">Total taken</div><div class="stat-value">${total}</div></div>
-      <div class="stat-card"><div class="stat-label">Balanced head</div><div class="stat-value">${balanced}</div></div>
-      <div class="stat-card"><div class="stat-label">Marathon pace</div><div class="stat-value">${marathon}</div></div>
-      <div class="stat-card"><div class="stat-label">Fully synced</div><div class="stat-value">${both}</div></div>
-    `;
+  function logout() {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('token-input').value = '';
+    document.getElementById('login-error').style.display = 'none';
   }
 
-  function renderResults() {
-    const hf = document.getElementById('filter-head').value;
-    const ff = document.getElementById('filter-feet').value;
+  async function loadResults() {
+    try {
+      const res = await fetch('/.netlify/functions/get-results');
+      const data = await res.json();
+      allResults = data.results || [];
+      updateStats();
+      renderCards();
+      document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
+    } catch (e) {
+      document.getElementById('results-container').innerHTML =
+        '<div class="empty-state">No results found or unable to load data.</div>';
+    }
+  }
+
+  function updateStats() {
+    const total = allResults.length;
+    const synced = allResults.filter(r => r.head === 'Balanced' && r.feet === 'Marathon-Pace').length;
+    const balanced = allResults.filter(r => r.head === 'Balanced').length;
+    const marathon = allResults.filter(r => r.feet === 'Marathon-Pace').length;
+    document.getElementById('stat-total').textContent = total;
+    document.getElementById('stat-synced').textContent = synced;
+    document.getElementById('stat-balanced').textContent = balanced;
+    document.getElementById('stat-marathon').textContent = marathon;
+  }
+
+  function renderCards() {
+    const search = document.getElementById('search-input').value.toLowerCase();
+    const headF = document.getElementById('head-filter').value;
+    const feetF = document.getElementById('feet-filter').value;
+    const syncF = document.getElementById('sync-filter').value;
 
     let filtered = allResults.filter(r => {
-      if (hf && r.head?.state !== hf) return false;
-      if (ff && r.feet?.state !== ff) return false;
-      return true;
+      const matchSearch = !search || (r.name||'').toLowerCase().includes(search) || (r.email||'').toLowerCase().includes(search);
+      const matchHead = !headF || r.head === headF;
+      const matchFeet = !feetF || r.feet === feetF;
+      const isSynced = r.head === 'Balanced' && r.feet === 'Marathon-Pace';
+      const matchSync = !syncF || (syncF === 'synced' ? isSynced : !isSynced);
+      return matchSearch && matchHead && matchFeet && matchSync;
     });
 
-    document.getElementById('results-count').textContent = `${filtered.length} result${filtered.length !== 1 ? 's' : ''}`;
-
-    if (!filtered.length) {
-      document.getElementById('results-list').innerHTML = `
-        <div class="empty-state">
-          <h3>No results yet</h3>
-          <p>Results will appear here after someone completes the assessment.</p>
-        </div>`;
+    if (filtered.length === 0) {
+      document.getElementById('results-container').innerHTML =
+        '<div class="empty-state">No results match your filters.</div>';
       return;
     }
 
-    document.getElementById('results-list').innerHTML = filtered.map((r, i) => {
-      const name = r.name || 'Anonymous';
-      const initials = name === 'Anonymous' ? '?' : name.split(' ').map(w => w[0]).join('').slice(0,2).toUpperCase();
-      const date = new Date(r.timestamp).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit' });
-      const headBadge = badgeClass(r.head?.state, 'head');
-      const feetBadge = badgeClass(r.feet?.state, 'feet');
-
+    const html = filtered.map((r, i) => {
+      const isSynced = r.head === 'Balanced' && r.feet === 'Marathon-Pace';
       const scores = r.rawScores || {};
-      const headScores = [
-        { label: 'Balanced', val: scores.balanced_head || 0 },
-        { label: 'Front-Heavy', val: scores.front_heavy || 0 },
-        { label: 'Back-Heavy', val: scores.back_heavy || 0 },
-      ];
-      const feetScores = [
-        { label: 'Marathon-Pace', val: scores.marathon_pace || 0 },
-        { label: 'Fast-Pace', val: scores.fast_pace || 0 },
-        { label: 'Slow-Pace', val: scores.slow_pace || 0 },
-      ];
+      const date = r.timestamp ? new Date(r.timestamp).toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'}) : '';
 
-      return `
-        <div class="result-card" id="card-${i}">
-          <div class="result-header" onclick="toggle(${i})">
-            <div class="avatar">${initials}</div>
-            <div class="result-meta">
-              <div class="result-name">${name}</div>
-              <div class="result-time">${date}</div>
-            </div>
-            <div class="badges">
-              <span class="badge ${headBadge}">${r.head?.state || '—'}</span>
-              <span class="badge ${feetBadge}">${r.feet?.state || '—'}</span>
-            </div>
-            <span class="chevron">▾</span>
-          </div>
-          <div class="result-body">
-            ${r.context ? `<div class="context-block">"${r.context}"</div>` : ''}
-            <div class="scores-grid">
-              <div class="score-section">
-                <div class="score-section-label">Head scores</div>
-                ${headScores.map(s => scoreRow(s.label, s.val)).join('')}
-              </div>
-              <div class="score-section">
-                <div class="score-section-label">Feet scores</div>
-                ${feetScores.map(s => scoreRow(s.label, s.val)).join('')}
-              </div>
-            </div>
-            ${r.transcript ? `
-              <div class="transcript-block">
-                <div class="transcript-label">Generated transcript</div>
-                <div class="transcript-text">${r.transcript.replace(/\n\n/g, '<br><br>')}</div>
-              </div>` : ''}
-          </div>
+      const bars = [
+        { name: 'Front-Heavy Head', key: 'front_heavy', color: '#8b3a2a' },
+        { name: 'Back-Heavy Head', key: 'back_heavy', color: '#b0803a' },
+        { name: 'Balanced Head', key: 'balanced_head', color: '#6b4c8a' },
+        { name: 'Fast-Pace Feet', key: 'fast_pace', color: '#8b3a2a' },
+        { name: 'Slow-Pace Feet', key: 'slow_pace', color: '#b0803a' },
+        { name: 'Marathon-Pace Feet', key: 'marathon_pace', color: '#2a6b5a' },
+      ].map(b => {
+        const val = scores[b.key] || 0;
+        const pct = Math.round((val / 15) * 100);
+        return `<div class="score-row">
+          <span class="score-name">${b.name}</span>
+          <div class="score-bar-bg"><div class="score-bar-fill" style="width:${pct}%;background:${b.color};"></div></div>
+          <span class="score-val">${val}/15</span>
         </div>`;
-    }).join('');
-  }
+      }).join('');
 
-  function scoreRow(label, val) {
-    const pct = Math.round((val / 15) * 100);
-    return `
-      <div class="score-row">
-        <span class="score-name">${label}</span>
-        <div class="score-bar-wrap"><div class="score-bar" style="width:${pct}%"></div></div>
-        <span class="score-num">${val}/15</span>
+      const contextHtml = r.context ? `<div class="context-text">"${r.context}"</div>` : '';
+      const transcriptHtml = r.transcript ? `
+        <button class="transcript-toggle" onclick="toggleTranscript(${i})">View transcript ▾</button>
+        <div class="transcript-body" id="transcript-${i}">${r.transcript}</div>` : '';
+
+      return `<div class="result-card">
+        <div class="card-header">
+          <div>
+            <div class="card-name">${r.name || 'Anonymous'}</div>
+            <div class="card-email">${r.email || ''}</div>
+          </div>
+          <div class="card-date">${date}</div>
+        </div>
+        <div class="states-row">
+          <span class="state-badge head">${r.head || '—'} Head</span>
+          <span class="state-badge feet">${r.feet || '—'} Feet</span>
+          <span class="state-badge ${isSynced ? 'synced' : 'unsynced'}">${isSynced ? '✦ In Sync' : 'Out of Sync'}</span>
+        </div>
+        <div class="score-bars">${bars}</div>
+        ${contextHtml}
+        ${transcriptHtml}
       </div>`;
+    }).join('');
+
+    document.getElementById('results-container').innerHTML = html;
   }
 
-  function badgeClass(state, type) {
-    if (!state) return '';
-    if (state === 'Balanced') return 'badge-balanced';
-    if (state === 'Front-Heavy') return 'badge-front';
-    if (state === 'Back-Heavy') return 'badge-back';
-    if (state === 'Marathon-Pace') return 'badge-marathon';
-    if (state === 'Fast-Pace') return 'badge-fast';
-    if (state === 'Slow-Pace') return 'badge-slow';
-    return '';
-  }
-
-  function toggle(i) {
-    document.getElementById(`card-${i}`).classList.toggle('open');
+  function toggleTranscript(i) {
+    const el = document.getElementById('transcript-' + i);
+    const btn = el.previousElementSibling;
+    if (el.style.display === 'block') {
+      el.style.display = 'none';
+      btn.textContent = 'View transcript ▾';
+    } else {
+      el.style.display = 'block';
+      btn.textContent = 'Hide transcript ▴';
+    }
   }
 </script>
 </body>
