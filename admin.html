@@ -198,9 +198,20 @@
 
   async function loadResults() {
     try {
-      const res = await fetch('/.netlify/functions/results');
+      const res = await fetch('/.netlify/functions/results?token=' + encodeURIComponent(ADMIN_TOKEN));
       const data = await res.json();
       allResults = data.results || [];
+      // Map blob data fields to admin card fields
+      allResults = allResults.map(r => ({
+        name: r.name || '',
+        email: r.email || '',
+        head: r.head?.state || r.head || '',
+        feet: r.feet?.state || r.feet || '',
+        context: r.context || '',
+        transcript: r.transcript || '',
+        timestamp: r.timestamp || '',
+        rawScores: r.rawScores || {}
+      }));
       updateStats();
       renderCards();
       document.getElementById('last-updated').textContent = 'Updated ' + new Date().toLocaleTimeString();
